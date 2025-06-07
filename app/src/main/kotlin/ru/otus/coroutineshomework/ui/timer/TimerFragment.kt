@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import ru.otus.coroutineshomework.databinding.FragmentTimerBinding
 import java.util.Locale
@@ -20,7 +19,7 @@ class TimerFragment : Fragment() {
 
     private var _binding: FragmentTimerBinding? = null
     private val binding get() = _binding!!
-
+    private var job: Job? = null
     private var time: Duration by Delegates.observable(Duration.ZERO) { _, _, newValue ->
         binding.time.text = newValue.toDisplayString()
     }
@@ -75,11 +74,16 @@ class TimerFragment : Fragment() {
     }
 
     private fun startTimer() {
-        // TODO: Start timer
+        job = viewLifecycleOwner.lifecycleScope.launch {
+            while (true){
+                delay(1)
+                time += 1.milliseconds
+            }
+        }
     }
 
     private fun stopTimer() {
-        // TODO: Stop timer
+        job?.cancel()
     }
 
     override fun onDestroyView() {
@@ -94,9 +98,9 @@ class TimerFragment : Fragment() {
         private fun Duration.toDisplayString(): String = String.format(
             Locale.getDefault(),
             "%02d:%02d.%03d",
-            this.inWholeMinutes.toInt(),
-            this.inWholeSeconds.toInt(),
-            this.inWholeMilliseconds.toInt()
+            this.inWholeMinutes.toInt().mod(60),
+            this.inWholeSeconds.toInt().mod(60),
+            this.inWholeMilliseconds.toInt().mod(1000)
         )
     }
 }
